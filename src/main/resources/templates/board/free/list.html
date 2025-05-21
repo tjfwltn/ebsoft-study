@@ -30,25 +30,20 @@
         <div class="col-auto">
             <label for="endDate" class="col-form-label">기간 끝</label>
             <input type="date" id="endDate" name="endDate" class="form-control"
-                   th:value="${condition.endDate}" />
+                   th:value="${condition.endDate}"
+                   th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}"/>
         </div>
 
         <div class="col-auto">
-            <label class="col-form-label d-block">카테고리</label>
-            <div>
-                <button type="submit" name="categoryId" value=""
-                        class="btn btn-outline-secondary btn-sm me-1"
-                        th:classappend="${condition.categoryId == null} ? 'active' : ''">전체</button>
-
-                <button type="submit"
-                        th:each="cat : ${categories}"
-                        th:name="'categoryId'"
+            <label for="categoryId" class="col-form-label">카테고리</label>
+            <select class="form-select" id="categoryId" name="categoryId">
+                <option th:value="''" th:selected="${condition.categoryId == null}">전체</option>
+                <option th:each="cat : ${categories}"
                         th:value="${cat.id}"
                         th:text="${cat.title}"
-                        class="btn btn-outline-secondary btn-sm me-1"
-                        th:classappend="${cat.id == condition.categoryId} ? 'active' : ''">
-                </button>
-            </div>
+                        th:selected="${cat.id == condition.categoryId}">
+                </option>
+            </select>
         </div>
 
         <div class="col-auto">

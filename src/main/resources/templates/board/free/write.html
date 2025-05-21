@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>게시글 등록</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container mt-4" style="max-width: 720px;">
+    <h2 class="mb-4">게시글 등록</h2>
+    <form id="writeForm" action="/board/free/write" method="post" enctype="multipart/form-data" novalidate>
+        <!-- 카테고리 선택 -->
+        <div class="mb-3">
+            <label for="categoryId" class="form-label">카테고리</label>
+            <select class="form-select" id="categoryId" name="categoryId" required>
+                <option th:each="cat : ${categories}"
+                        th:value="${cat.id}"
+                        th:text="${cat.title}"
+                        th:selected="${cat.id}">
+                </option>
+            </select>
+        </div>
+
+        <!-- 작성자 -->
+        <div class="mb-3">
+            <label for="username" class="form-label">작성자</label>
+            <input type="text" class="form-control" id="username" name="username"
+                   minlength="3" maxlength="4" required
+                   pattern=".{3,4}"
+                   title="3글자 이상 4글자 미만으로 입력해주세요." />
+        </div>
+
+        <!-- 비밀번호 -->
+        <div class="mb-3">
+            <label for="password" class="form-label">비밀번호</label>
+            <input type="password" class="form-control" id="password" name="password"
+                   minlength="4" maxlength="15" required
+                   pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}|:;<>,.?/~\-]).{4,15}$"
+                   title="영문, 숫자, 특수문자를 포함한 4글자 이상 16글자 미만 비밀번호를 입력하세요." />
+        </div>
+
+        <!-- 비밀번호 확인 -->
+        <div class="mb-3">
+            <label for="confirmPassword" class="form-label">비밀번호 확인</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required />
+        </div>
+
+        <!-- 제목 -->
+        <div class="mb-3">
+            <label for="title" class="form-label">제목</label>
+            <input type="text" class="form-control" id="title" name="title"
+                   minlength="4" maxlength="99" required
+                   pattern=".{4,99}"
+                   title="4글자 이상 100글자 미만으로 입력해주세요." />
+        </div>
+
+        <!-- 내용 -->
+        <div class="mb-3">
+            <label for="content" class="form-label">내용</label>
+            <textarea class="form-control" id="content" name="content" rows="6"
+                      minlength="4" maxlength="1999" required
+                      title="4글자 이상 2000글자 미만으로 입력해주세요."></textarea>
+        </div>
+
+        <!-- 파일 첨부 -->
+        <div class="mb-3">
+            <label for="files" class="form-label">파일 첨부</label>
+            <input type="file" class="form-control" id="files" name="files" multiple />
+            <ul id="fileList" class="mt-2 list-unstyled"></ul>
+        </div>
+
+        <!-- 버튼 그룹 -->
+        <div class="d-flex justify-content-between">
+            <a href="/board/free/list" class="btn btn-secondary">취소</a>
+            <button type="button" id="submitBtn" class="btn btn-primary">등록</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let selectedFiles = [];
+
+    function handleFileChange(event) {
+        const files = Array.from(event.target.files);
+        selectedFiles = [...selectedFiles, ...files];
+        updateFileList();
+        resetFileInput();
+    }
+
+    function updateFileList() {
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = '';
+        selectedFiles.forEach((file, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                • ${file.name}
+                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeFile(${index})">❌</button>
+            `;
+            fileList.appendChild(li);
+        });
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        updateFileList();
+    }
+
+    function resetFileInput() {
+        const newInput = document.createElement('input');
+        newInput.type = 'file';
+        newInput.className = 'form-control';
+        newInput.id = 'files';
+        newInput.name = 'files';
+        newInput.multiple = true;
+        newInput.addEventListener('change', handleFileChange);
+        const oldInput = document.getElementById('files');
+        oldInput.replaceWith(newInput);
+    }
+
+    function validatePasswords() {
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('confirmPassword').value;
+
+        if (password !== confirm) {
+            alert('비밀번호가 일치하지 않습니다.');
+            return false;
+        }
+        return true;
+    }
+
+    function submitForm(event) {
+        event.preventDefault();
+
+        if (!validatePasswords()) return;
+
+        const form = document.getElementById('writeForm');
+        const formData = new FormData(form);
+
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
+        });
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                alert('게시글이 등록되었습니다.');
+                window.location.href = '/board/free/list';
+            } else {
+                alert('등록 중 오류가 발생했습니다.');
+            }
+        }).catch(error => {
+            console.error(error);
+            alert('에러가 발생했습니다.');
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('files').addEventListener('change', handleFileChange);
+        document.getElementById('submitBtn').addEventListener('click', submitForm);
+    });
+</script>
+
+</body>
+</html>

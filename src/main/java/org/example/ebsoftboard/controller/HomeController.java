@@ -1,6 +1,7 @@
 package org.example.ebsoftboard.controller;
 
 import org.example.ebsoftboard.dto.PageGroupDTO;
+import org.example.ebsoftboard.dto.PostRequestDTO;
 import org.example.ebsoftboard.dto.PostResponseDTO;
 import org.example.ebsoftboard.dto.PostSearchCondition;
 import org.example.ebsoftboard.entity.Category;
@@ -12,9 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -53,6 +52,22 @@ public class HomeController {
 
         return TEMPLATE_PATH + "list";
     }
+
+    @GetMapping("/write")
+    public String write(Model model) {
+        List<Category> categories = categoryService.getCategories();
+        model.addAttribute("categories", categories);
+        return TEMPLATE_PATH + "write";
+    }
+
+    @PostMapping("/write")
+    public String write(@ModelAttribute PostRequestDTO postRequestDTO) {
+
+    }
+//    @GetMapping("/view/*")
+//    public String view(@RequestParam Long id, Model model) {
+//        PostResponseDTO post = postService.getPost(id);
+//    }
 
     private PageGroupDTO calculatePageGroupInfo(Page<PostResponseDTO> postList) {
         int pageGroupSize = 10;

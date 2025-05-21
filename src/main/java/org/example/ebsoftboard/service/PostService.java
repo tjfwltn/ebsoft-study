@@ -19,4 +19,14 @@ public class PostService {
     public Page<PostResponseDTO> getPaginatedPostList(PostSearchCondition condition, Pageable pageable) {
         return postRepository.searchPosts(condition, pageable);
     }
+
+    public PostResponseDTO getPost(Long id) {
+//        postRepository.findById(id).ifPresent(post -> {
+//            PostResponseDTO.builder()
+//                    .id(post.getId())
+//                    .title(post.getTitle())
+//        })
+
+        return null;
+    }
 }
