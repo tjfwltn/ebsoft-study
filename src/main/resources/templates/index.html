@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>카테고리 목록</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+<h1 style="text-align: center;">카테고리 목록</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>이름</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="category : ${categories}">
+        <td th:text="${category.id}"></td>
+        <td th:text="${category.title}"></td> <!-- name 필드는 실제 entity 필드명에 맞게 수정 -->
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

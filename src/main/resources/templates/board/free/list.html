@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>게시글 목록</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <style>
+        .truncate {
+            max-width: 400px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .file-icon {
+            font-size: 1.2rem;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <h1>게시글 목록</h1>
+
+    <form th:action="@{/board/free/list}" method="get" class="row g-3 align-items-center mb-3">
+        <!-- 날짜 범위 -->
+        <div class="col-auto">
+            <label for="startDate" class="col-form-label">기간 시작</label>
+            <input type="date" id="startDate" name="startDate" class="form-control" th:value="${startDate}" />
+        </div>
+        <div class="col-auto">
+            <label for="endDate" class="col-form-label">기간 끝</label>
+            <input type="date" id="endDate" name="endDate" class="form-control" th:value="${endDate}" />
+        </div>
+
+        <!-- 카테고리 버튼들 -->
+        <div class="col-auto">
+            <label class="col-form-label d-block">카테고리</label>
+            <div>
+                <button type="submit" name="categoryId" value="" class="btn btn-outline-secondary btn-sm me-1"
+                        th:classappend="${categoryId == null} ? 'active' : ''">전체</button>
+                <button type="submit" th:each="cat : ${categories}"
+                        th:name="'categoryId'"
+                        th:value="${cat.id}"
+                        th:text="${cat.title}"
+                        class="btn btn-outline-secondary btn-sm me-1"
+                        th:classappend="${cat.id == categoryId} ? 'active' : ''"></button>
+            </div>
+        </div>
+
+        <!-- 검색창 -->
+        <div class="col-auto">
+            <label for="keyword" class="col-form-label">검색</label>
+            <input type="text" id="keyword" name="keyword" class="form-control" placeholder="검색어 입력" th:value="${keyword}" />
+        </div>
+
+        <!-- 검색 버튼 -->
+        <div class="col-auto align-self-end">
+            <button type="submit" class="btn btn-primary">검색</button>
+        </div>
+    </form>
+
+    <!-- 총 게시글 수 -->
+    <div>
+        <p>총 게시글 수: <strong th:text="${totalCount}">0</strong></p>
+    </div>
+
+    <!-- 게시글 테이블 -->
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+        <tr>
+            <th>카테고리</th>
+            <th>첨부파일</th>
+            <th>제목</th>
+            <th>작성자</th>
+            <th>조회수</th>
+            <th>등록 일시</th>
+            <th>수정 일시</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="post : ${postList}">
+            <td th:text="${post.category.title}">카테고리명</td>
+            <td>
+                <span th:if="${post.hasAttachment}" class="file-icon" title="첨부파일 있음">📎</span>
+            </td>
+            <td class="truncate" th:title="${post.title}"
+                th:text="${#strings.length(post.title) > 80} ? ${post.title.substring(0,80)} + '...' : post.title">
+                게시글 제목
+            </td>
+            <td th:text="${post.username}">작성자</td>
+            <td th:text="${post.viewCount}">0</td>
+            <td th:text="${#dates.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">2025-05-17 10:00</td>
+            <td th:text="${post.modifiedAt != null ? #dates.format(post.modifiedAt, 'yyyy-MM-dd HH:mm') : '-'}">-</td>
+        </tr>
+        <tr th:if="${postList.size()} == 0">
+            <td colspan="7" class="text-center">게시글이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- 페이지네이션 -->
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${pageNumber == 1} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/board/free/list(page=${pageNumber-1}, startDate=${startDate}, endDate=${endDate}, categoryId=${categoryId}, keyword=${keyword})}">이전</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(1, totalPages)}"
+                th:classappend="${i == pageNumber} ? 'active'">
+                <a class="page-link"
+                   th:href="@{/board/free/list(page=${i}, startDate=${startDate}, endDate=${endDate}, categoryId=${categoryId}, keyword=${keyword})}"
+                   th:text="${i}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${pageNumber == totalPages} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/board/free/list(page=${pageNumber+1}, startDate=${startDate}, endDate=${endDate}, categoryId=${categoryId}, keyword=${keyword})}">다음</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>
