@@ -2,6 +2,7 @@ package org.example.ebsoftboard.repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 import org.example.ebsoftboard.dto.PostResponseDTO;
 import org.example.ebsoftboard.dto.PostSearchCondition;
@@ -19,59 +20,76 @@ import java.util.Map;
 public class PostRepositoryImpl implements PostRepositoryCustom {
 
     @PersistenceContext
-    private EntityManager em;
+    private final EntityManager em;
 
     @Override
     public Page<PostResponseDTO> searchPosts(PostSearchCondition condition, Pageable pageable) {
-        String base = "FROM Post p LEFT JOIN p.category c WHERE 1=1";
-        StringBuilder where = new StringBuilder();
-        Map<String, Object> params = new HashMap<>();
+        StringBuilder selectJpql = new StringBuilder("""
+        SELECT new org.example.ebsoftboard.dto.PostResponseDTO(
+            p.id,
+            p.title,
+            c.title,
+            p.username,
+            p.viewCount,
+            p.createdAt,
+            p.modifiedAt,
+            (SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM File f WHERE f.post.id = p.id))
+        FROM Post p
+        LEFT JOIN p.category c
+        WHERE 1=1
+    """);
 
+        StringBuilder countJpql = new StringBuilder("""
+        SELECT COUNT(p)
+        FROM Post p
+        LEFT JOIN p.category c
+        WHERE 1=1
+    """);
+
+        Map<String, Object> params = new HashMap<>();
+        applyConditions(condition, selectJpql, countJpql, params);
+
+        TypedQuery<PostResponseDTO> contentQuery = em.createQuery(selectJpql.toString(), PostResponseDTO.class)
+                .setFirstResult((int) pageable.getOffset())
+                .setMaxResults(pageable.getPageSize());
+
+        TypedQuery<Long> countQuery = em.createQuery(countJpql.toString(), Long.class);
+
+        setQueryParameters(params, contentQuery, countQuery);
+
+        List<PostResponseDTO> content = contentQuery.getResultList();
+        Long total = countQuery.getSingleResult();
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    private static void setQueryParameters(Map<String, Object> params, TypedQuery<PostResponseDTO> contentQuery, TypedQuery<Long> countQuery) {
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            contentQuery.setParameter(entry.getKey(), entry.getValue());
+            countQuery.setParameter(entry.getKey(), entry.getValue());
+        }
+    }
+
+    private static void applyConditions(PostSearchCondition condition, StringBuilder selectJpql, StringBuilder countJpql, Map<String, Object> params) {
         if (condition.getCategoryId() != null) {
-            where.append(" AND c.id = :categoryId");
+            String clause = " AND c.id = :categoryId";
+            selectJpql.append(clause);
+            countJpql.append(clause);
             params.put("categoryId", condition.getCategoryId());
         }
 
-        if (condition.getKeyword() != null && !condition.getKeyword().isEmpty()) {
-            where.append(" AND (p.title LIKE :keyword OR p.username LIKE :keyword OR p.contents LIKE :keyword)");
+        if (condition.getKeyword() != null && !condition.getKeyword().isBlank()) {
+            String clause = """
+            AND (p.title LIKE :keyword OR p.username LIKE :keyword OR p.contents LIKE :keyword)
+        """;
+            selectJpql.append(clause);
+            countJpql.append(clause);
             params.put("keyword", "%" + condition.getKeyword() + "%");
         }
 
-        where.append(" AND p.createdAt BETWEEN :startDate AND :endDate");
+        String dateClause = " AND p.createdAt BETWEEN :startDate AND :endDate";
+        selectJpql.append(dateClause);
+        countJpql.append(dateClause);
         params.put("startDate", condition.getStartDateOrDefault());
         params.put("endDate", condition.getEndDateOrDefault());
-
-        String jpql = """
-                SELECT new org.example.ebsoftboard.dto.PostResponseDTO(
-                p.id,
-                p.title,
-                c.id,
-                c.title,
-                p.username,
-                p.viewCount,
-                p.createdAt,
-                p.modifiedAt,
-                (SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM File f WHERE f.post.id = p.id))
-                """ + base + where;
-
-        String countJpql = "SELECT COUNT(p) " + base + where;
-
-        List<PostResponseDTO> content = em.createQuery(jpql, PostResponseDTO.class)
-                .setFirstResult((int) pageable.getOffset())
-                .setMaxResults(pageable.getPageSize())
-                .setParameter("startDate", params.get("startDate"))
-                .setParameter("endDate", params.get("endDate"))
-                .setParameter("categoryId", params.get("categoryId"))
-                .setParameter("keyword", params.get("keyword"))
-                .getResultList();
-
-        Long total = em.createQuery(countJpql, Long.class)
-                .setParameter("startDate", params.get("startDate"))
-                .setParameter("endDate", params.get("endDate"))
-                .setParameter("categoryId", params.get("categoryId"))
-                .setParameter("keyword", params.get("keyword"))
-                .getSingleResult();
-
-        return new PageImpl<>(content, pageable, total);
     }
 }

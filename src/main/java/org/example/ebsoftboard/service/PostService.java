@@ -1,8 +1,9 @@
 package org.example.ebsoftboard.service;
 
-import org.example.ebsoftboard.dto.PostListResponseDTO;
+import org.example.ebsoftboard.dto.PostResponseDTO;
 import org.example.ebsoftboard.dto.PostSearchCondition;
 import org.example.ebsoftboard.repository.PostRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,7 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
-
-    public PostListResponseDTO getPaginatedPostList(PostSearchCondition condition, Pageable pageable) {
-        return null;
+    public Page<PostResponseDTO> getPaginatedPostList(PostSearchCondition condition, Pageable pageable) {
+        return postRepository.searchPosts(condition, pageable);
     }
 }

@@ -18,5 +18,5 @@ public class PostResponseDTO {
     private int viewCount;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
-    private boolean hasAttachment;
+    private boolean hasFiles;
 }

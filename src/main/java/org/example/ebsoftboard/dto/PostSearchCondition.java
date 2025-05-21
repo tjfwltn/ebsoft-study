@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 public class PostSearchCondition {
 
     private static final long ONE_YEAR = 1;
+    private static final long ONE_DAY = 1;
     private Long categoryId;
     private String keyword;
 
@@ -22,12 +24,12 @@ public class PostSearchCondition {
     @DateTimeFormat
     private LocalDate endDate;
 
-    public LocalDate getStartDateOrDefault() {
-        return (startDate == null) ? LocalDate.now().minusYears(ONE_YEAR) : startDate;
+    public LocalDateTime getStartDateOrDefault() {
+        return (startDate == null) ? LocalDate.now().minusYears(ONE_YEAR).atStartOfDay() : startDate.atStartOfDay();
     }
 
-    public LocalDate getEndDateOrDefault() {
-        return (endDate == null) ? LocalDate.now() : endDate;
+    public LocalDateTime getEndDateOrDefault() {
+        return (endDate == null) ? LocalDate.now().plusDays(ONE_DAY).atStartOfDay() : endDate.plusDays(ONE_DAY).atStartOfDay();
     }
 
 }

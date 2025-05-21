@@ -1,10 +1,12 @@
 package org.example.ebsoftboard.controller;
 
-import org.example.ebsoftboard.dto.PostListResponseDTO;
+import org.example.ebsoftboard.dto.PageGroupDTO;
+import org.example.ebsoftboard.dto.PostResponseDTO;
 import org.example.ebsoftboard.dto.PostSearchCondition;
 import org.example.ebsoftboard.entity.Category;
 import org.example.ebsoftboard.service.CategoryService;
 import org.example.ebsoftboard.service.PostService;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -38,10 +40,28 @@ public class HomeController {
 
     @GetMapping("/list")
     public String list(@ModelAttribute PostSearchCondition condition,
-                       @PageableDefault(size = 10, direction = Sort.Direction.DESC) Pageable pageable,
+                       @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
                        Model model) {
-        PostListResponseDTO response = postService.getPaginatedPostList(condition, pageable);
-        model.addAttribute("response", response);
+        List<Category> categories = categoryService.getCategories();
+        Page<PostResponseDTO> postList = postService.getPaginatedPostList(condition, pageable);
+
+        PageGroupDTO pageGroup = calculatePageGroupInfo(postList);
+        model.addAttribute("categories", categories);
+        model.addAttribute("postList", postList);
+        model.addAttribute("condition", condition);
+        model.addAttribute("pageGroup", pageGroup);
+
         return TEMPLATE_PATH + "list";
+    }
+
+    private PageGroupDTO calculatePageGroupInfo(Page<PostResponseDTO> postList) {
+        int pageGroupSize = 10;
+        int currentPage = postList.getNumber() + 1;
+        int currentGroup = (currentPage - 1) * pageGroupSize;
+
+        int startPage = currentGroup * pageGroupSize + 1;
+        int endPage = Math.min(startPage + pageGroupSize - 1, postList.getTotalPages());
+
+        return new PageGroupDTO(startPage, endPage, pageGroupSize);
     }
 }
