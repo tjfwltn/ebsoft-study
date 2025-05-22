@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>게시판 - 보기</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <style>
+        .file-icon {
+            font-size: 1.2rem;
+            color: #007bff;
+        }
+        .comment-box {
+            margin-top: 2rem;
+        }
+        .modal-custom {
+            display: none;
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <h2>게시판 - 보기</h2>
+
+    <div class="d-flex justify-content-between mb-2">
+        <div>
+            <strong>작성자:</strong> <span th:text="${post.username}"></span>
+        </div>
+        <div>
+            <strong>등록일:</strong> <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+            &nbsp; | &nbsp;
+            <strong>수정일:</strong> <span th:text="${#temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm')}"></span>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">
+                <strong>[</strong><span th:text="${post.categoryTitle}"></span><strong>]</strong>
+                <span th:text="${post.title}" class="ms-2"></span>
+                <span class="float-end">조회수: <span th:text="${post.viewCount}"></span></span>
+            </h5>
+            <hr>
+            <p class="card-text" th:utext="${post.content}"></p>
+        </div>
+    </div>
+
+    <div th:if="${post.files != null and !post.files.isEmpty()}" class="mb-3">
+        <h5>첨부파일</h5>
+        <ul class="list-group">
+            <li class="list-group-item" th:each="file : ${post.files}">
+                <a th:href="@{/file/download(id=${file.id})}" th:text="${file.originalFileName}" class="text-decoration-none file-icon">📎 파일 다운로드</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="comment-box">
+        <h5>댓글</h5>
+        <div th:if="${post.comments != null and !post.comments.isEmpty()}">
+            <ul class="list-group mb-3">
+                <li class="list-group-item" th:each="comment : ${post.comments}">
+                    <div class="d-flex justify-content-between">
+                        <small th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+                    </div>
+                    <p th:text="${comment.contents}" class="mb-0"></p>
+                </li>
+            </ul>
+        </div>
+        <div th:if="${post.comments == null or post.comments.isEmpty()}">
+            <p class="text-muted">댓글이 없습니다.</p>
+        </div>
+    </div>
+
+    <form th:action="@{/comment/write}" method="post" class="mb-4">
+        <input type="hidden" name="postId" th:value="${post.id}" />
+        <div class="mb-3">
+            <label for="content" class="form-label">내용</label>
+            <textarea name="content" id="content" class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">댓글 등록</button>
+    </form>
+
+    <div class="mb-4">
+        <button class="btn btn-warning me-2" onclick="openPasswordModal('modify')">수정</button>
+        <button class="btn btn-danger me-2" onclick="openPasswordModal('delete')">삭제</button>
+        <a th:href="@{/board/free/list}" class="btn btn-secondary">목록으로</a>
+    </div>
+</div>
+
+<!-- 비밀번호 확인 모달 -->
+<div id="passwordModal" class="modal-custom">
+    <p>비밀번호를 입력하세요:</p>
+    <input type="password" id="passwordInput" class="form-control mb-3" />
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-primary me-2" onclick="submitPassword()">확인</button>
+        <button class="btn btn-secondary" onclick="closeModal()">취소</button>
+    </div>
+    <input type="hidden" id="postId" th:value="${post.id}" />
+    <input type="hidden" id="actionType" />
+</div>
+
+<script>
+    function openPasswordModal(action) {
+        document.getElementById("passwordModal").style.display = "block";
+        document.getElementById("actionType").value = action;
+    }
+
+    function closeModal() {
+        document.getElementById("passwordModal").style.display = "none";
+        document.getElementById("passwordInput").value = "";
+    }
+
+    function submitPassword() {
+        const password = document.getElementById("passwordInput").value;
+        const postId = document.getElementById("postId").value;
+        const actionType = document.getElementById("actionType").value;
+
+        fetch(`/post/verifyPassword`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: postId, password: password })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.valid) {
+                    if (actionType === "modify") {
+                        window.location.href = `/post/modify?id=${postId}`;
+                    } else if (actionType === "delete") {
+                        const form = document.createElement("form");
+                        form.method = "POST";
+                        form.action = "/post/delete";
+                        const input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = "id";
+                        input.value = postId;
+                        form.appendChild(input);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                } else {
+                    alert("비밀번호가 일치하지 않습니다.");
+                }
+            });
+
+        closeModal();
+    }
+</script>
+</body>
+</html>

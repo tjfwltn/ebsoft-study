@@ -15,9 +15,9 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class PostRequestDTO {
+
     private static final String PASSWORD_REGEX =
             "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}:;\"'<>?,./\\\\]).{4,}$";
-
     @NotNull
     private Long categoryId;
 

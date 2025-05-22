@@ -4,7 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
-import org.example.ebsoftboard.dto.PostResponseDTO;
+import org.example.ebsoftboard.dto.PostListResponseDTO;
 import org.example.ebsoftboard.dto.PostSearchCondition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,9 +23,9 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     private final EntityManager em;
 
     @Override
-    public Page<PostResponseDTO> searchPosts(PostSearchCondition condition, Pageable pageable) {
+    public Page<PostListResponseDTO> searchPosts(PostSearchCondition condition, Pageable pageable) {
         StringBuilder selectJpql = new StringBuilder("""
-        SELECT new org.example.ebsoftboard.dto.PostResponseDTO(
+        SELECT new org.example.ebsoftboard.dto.PostListResponseDTO(
             p.id,
             p.title,
             c.title,
@@ -49,7 +49,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         Map<String, Object> params = new HashMap<>();
         applyConditions(condition, selectJpql, countJpql, params);
 
-        TypedQuery<PostResponseDTO> contentQuery = em.createQuery(selectJpql.toString(), PostResponseDTO.class)
+        TypedQuery<PostListResponseDTO> contentQuery = em.createQuery(selectJpql.toString(), PostListResponseDTO.class)
                 .setFirstResult((int) pageable.getOffset())
                 .setMaxResults(pageable.getPageSize());
 
@@ -57,12 +57,12 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
         setQueryParameters(params, contentQuery, countQuery);
 
-        List<PostResponseDTO> content = contentQuery.getResultList();
+        List<PostListResponseDTO> content = contentQuery.getResultList();
         Long total = countQuery.getSingleResult();
         return new PageImpl<>(content, pageable, total);
     }
 
-    private static void setQueryParameters(Map<String, Object> params, TypedQuery<PostResponseDTO> contentQuery, TypedQuery<Long> countQuery) {
+    private static void setQueryParameters(Map<String, Object> params, TypedQuery<PostListResponseDTO> contentQuery, TypedQuery<Long> countQuery) {
         for (Map.Entry<String, Object> entry : params.entrySet()) {
             contentQuery.setParameter(entry.getKey(), entry.getValue());
             countQuery.setParameter(entry.getKey(), entry.getValue());

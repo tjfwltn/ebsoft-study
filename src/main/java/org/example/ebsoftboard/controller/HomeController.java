@@ -1,12 +1,10 @@
 package org.example.ebsoftboard.controller;
 
 import jakarta.validation.Valid;
-import org.example.ebsoftboard.dto.PageGroupDTO;
-import org.example.ebsoftboard.dto.PostRequestDTO;
-import org.example.ebsoftboard.dto.PostResponseDTO;
-import org.example.ebsoftboard.dto.PostSearchCondition;
+import org.example.ebsoftboard.dto.*;
 import org.example.ebsoftboard.entity.Category;
 import org.example.ebsoftboard.service.CategoryService;
+import org.example.ebsoftboard.service.FileService;
 import org.example.ebsoftboard.service.PostService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,10 +13,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -36,21 +31,14 @@ public class HomeController {
         this.postService = postService;
     }
 
-    @GetMapping("/index")
-    public String home(Model model) {
-        List<Category> categories = categoryService.getCategories();
-        model.addAttribute("categories", categories);
-        return TEMPLATE_PATH + "index";
-    }
-
     @GetMapping("/list")
     public String list(@ModelAttribute PostSearchCondition condition,
                        @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
                        Model model) {
         List<Category> categories = categoryService.getCategories();
-        Page<PostResponseDTO> postList = postService.getPaginatedPostList(condition, pageable);
+        Page<PostListResponseDTO> postList = postService.getPaginatedPostList(condition, pageable);
 
-        PageGroupDTO pageGroup = calculatePageGroupInfo(postList);
+        PageGroupDTO pageGroup = calculatePageGroupInfo(postList); // 이전, 다음 버튼을 위한 페이징 그룹 계산
         model.addAttribute("categories", categories);
         model.addAttribute("postList", postList);
         model.addAttribute("condition", condition);
@@ -78,7 +66,7 @@ public class HomeController {
         }
 
         try {
-            postService.savePost(postRequestDTO);
+            postService.savePostWithFiles(postRequestDTO);
             return REDIRECT + TEMPLATE_PATH + "list";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -88,8 +76,15 @@ public class HomeController {
         }
     }
 
+    @GetMapping("/view/{id}")
+    public String view(@PathVariable Long id, Model model) {
+        PostDetailResponseDTO post = postService.getPost(id);
+        model.addAttribute("post", post);
+        return TEMPLATE_PATH + "view";
+    }
 
-    private PageGroupDTO calculatePageGroupInfo(Page<PostResponseDTO> postList) {
+
+    private PageGroupDTO calculatePageGroupInfo(Page<PostListResponseDTO> postList) {
         int pageGroupSize = 10;
         int currentPage = postList.getNumber() + 1;
         int currentGroup = (currentPage - 1) * pageGroupSize;
