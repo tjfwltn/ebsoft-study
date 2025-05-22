@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <style>
         .truncate {
-            max-width: 400px;
+            max-width: 100%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -14,6 +14,10 @@
         .file-icon {
             font-size: 1.2rem;
             color: #007bff;
+        }
+        table td, table th {
+            vertical-align: middle !important;
+            text-align: center;
         }
     </style>
 </head>
@@ -61,7 +65,16 @@
         <p>총 게시글 수: <strong th:text="${postList.totalElements}">0</strong></p>
     </div>
 
-    <table class="table table-bordered table-hover">
+    <table class="table table-bordered table-hover" style="table-layout: fixed;">
+        <colgroup>
+            <col style="width: 8%;">   <!-- 카테고리 -->
+            <col style="width: 6%;">   <!-- 첨부 -->
+            <col style="width: 42%;">  <!-- 제목 -->
+            <col style="width: 10%;">  <!-- 작성자 -->
+            <col style="width: 8%;">   <!-- 조회수 -->
+            <col style="width: 13%;">  <!-- 등록 일시 -->
+            <col style="width: 13%;">  <!-- 수정 일시 -->
+        </colgroup>
         <thead class="table-light">
         <tr>
             <th>카테고리</th>
@@ -78,16 +91,20 @@
             <td colspan="7" class="text-center">게시글이 없습니다.</td>
         </tr>
         <tr th:unless="${postList.isEmpty()}" th:each="post : ${postList.content}">
-            <td th:text="${post.categoryName}">카테고리명</td> <td>
-            <span th:if="${post.hasFiles}" class="file-icon" title="첨부파일 있음">📎</span> </td>
-            <td class="truncate" th:title="${post.title}"
-                th:text="${#strings.length(post.title) > 80} ? ${post.title.substring(0,80)} + '...' : post.title">
-                게시글 제목
+            <td th:text="${post.categoryTitle}">카테고리명</td>
+            <td>
+                <span th:if="${post.hasFiles}" class="file-icon" title="첨부파일 있음">📎</span>
+            </td>
+            <td class="truncate" th:title="${post.title}">
+                <a th:href="@{'/board/free/view/' + ${post.id}}"
+                   th:text="${#strings.length(post.title) > 80} ? ${#strings.concat(#strings.substring(post.title,0,80), '...')} : ${post.title}"
+                   class="text-decoration-none text-dark">
+                </a>
             </td>
             <td th:text="${post.username}">작성자</td>
             <td th:text="${post.viewCount}">0</td>
-            <td th:text="${#dates.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">등록일</td>
-            <td th:text="${post.modifiedAt != null ? #dates.format(post.modifiedAt, 'yyyy-MM-dd HH:mm') : '-'}">수정일</td>
+            <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">등록일</td>
+            <td th:text="${post.modifiedAt != null ? #temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm') : '-'}">수정일</td>
         </tr>
         </tbody>
     </table>
@@ -122,6 +139,9 @@
             </li>
         </ul>
     </nav>
+    <div class="d-flex justify-content-end mt-3">
+        <a class="btn btn-success" th:href="@{/board/free/write}">등록</a>
+    </div>
 </div>
 </body>
 </html>

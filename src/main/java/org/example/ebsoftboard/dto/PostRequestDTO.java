@@ -1,9 +1,11 @@
 package org.example.ebsoftboard.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,11 +13,12 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class PostRequestDTO {
     private static final String PASSWORD_REGEX =
-            "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+{}\\[\\]:;<>,.?~\\\\-])[\\w!@#$%^&*()_+{}\\[\\]:;<>,.?~\\\\-]{8,}$";
+            "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}:;\"'<>?,./\\\\]).{4,}$";
 
-    @NotBlank
+    @NotNull
     private Long categoryId;
 
     @NotBlank
@@ -40,4 +43,5 @@ public class PostRequestDTO {
     private String content;
 
     private List<MultipartFile> files;
+
 }

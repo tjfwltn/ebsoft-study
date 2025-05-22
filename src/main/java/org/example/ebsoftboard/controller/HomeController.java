@@ -1,5 +1,6 @@
 package org.example.ebsoftboard.controller;
 
+import jakarta.validation.Valid;
 import org.example.ebsoftboard.dto.PageGroupDTO;
 import org.example.ebsoftboard.dto.PostRequestDTO;
 import org.example.ebsoftboard.dto.PostResponseDTO;
@@ -13,7 +14,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
@@ -22,6 +27,7 @@ import java.util.List;
 public class HomeController {
 
     private static final String TEMPLATE_PATH = "board/free/";
+    private static final String REDIRECT = "redirect:/";
     private final CategoryService categoryService;
     private final PostService postService;
 
@@ -57,17 +63,31 @@ public class HomeController {
     public String write(Model model) {
         List<Category> categories = categoryService.getCategories();
         model.addAttribute("categories", categories);
+        model.addAttribute("postRequestDTO", new PostRequestDTO());
         return TEMPLATE_PATH + "write";
     }
 
     @PostMapping("/write")
-    public String write(@ModelAttribute PostRequestDTO postRequestDTO) {
+    public String write(@Valid @ModelAttribute PostRequestDTO postRequestDTO,
+                        BindingResult bindingResult, Model model) {
+        List<Category> categories = categoryService.getCategories();
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("postRequestDTO", postRequestDTO);
+            model.addAttribute("categories", categories);
+            return TEMPLATE_PATH + "write";
+        }
 
+        try {
+            postService.savePost(postRequestDTO);
+            return REDIRECT + TEMPLATE_PATH + "list";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("postRequestDTO", postRequestDTO);
+            model.addAttribute("categories", categories);
+            return TEMPLATE_PATH + "write";
+        }
     }
-//    @GetMapping("/view/*")
-//    public String view(@RequestParam Long id, Model model) {
-//        PostResponseDTO post = postService.getPost(id);
-//    }
+
 
     private PageGroupDTO calculatePageGroupInfo(Page<PostResponseDTO> postList) {
         int pageGroupSize = 10;
