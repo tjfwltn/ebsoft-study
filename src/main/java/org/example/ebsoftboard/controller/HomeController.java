@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import org.example.ebsoftboard.dto.*;
 import org.example.ebsoftboard.entity.Category;
 import org.example.ebsoftboard.service.CategoryService;
-import org.example.ebsoftboard.service.FileService;
 import org.example.ebsoftboard.service.PostService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,6 +46,13 @@ public class HomeController {
         return TEMPLATE_PATH + "list";
     }
 
+    @GetMapping("/view/{id}")
+    public String view(@PathVariable Long id, Model model) {
+        PostDetailResponseDTO post = postService.getPostAndIncreaseViewCount(id);
+        model.addAttribute("post", post);
+        return TEMPLATE_PATH + "view";
+    }
+
     @GetMapping("/write")
     public String write(Model model) {
         List<Category> categories = categoryService.getCategories();
@@ -76,13 +82,19 @@ public class HomeController {
         }
     }
 
-    @GetMapping("/view/{id}")
-    public String view(@PathVariable Long id, Model model) {
+    /**
+     *
+     * 지금 상세 게시글 조회를 위해 getPost() 메서드 내에서 findById() 메서드를 한번에 files, category, comment를
+     * 한번에 가져오는 메서드를 사용하는데, modify에서는 comment가 필요 없음. 이걸 어떻게 해야 할까?
+     * PostModifyRequestDTO 라는 클래스를 만들어야 하나?
+     */
+    @GetMapping("/modify/{id}")
+    public String modify(@PathVariable Long id, Model model) {
         PostDetailResponseDTO post = postService.getPost(id);
         model.addAttribute("post", post);
-        return TEMPLATE_PATH + "view";
-    }
 
+        return TEMPLATE_PATH + "modify";
+    }
 
     private PageGroupDTO calculatePageGroupInfo(Page<PostListResponseDTO> postList) {
         int pageGroupSize = 10;

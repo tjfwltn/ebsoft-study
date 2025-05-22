@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>게시글 수정</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container mt-4" style="max-width: 800px;">
+    <h2 class="mb-4">게시글 수정</h2>
+
+    <form th:action="@{/board/free/modify/{id}(id=${post.id})}" th:object="${post}" method="post" enctype="multipart/form-data" novalidate>
+        <table class="table table-bordered align-middle">
+            <tbody>
+            <!-- 읽기 전용 정보 -->
+            <tr>
+                <th class="bg-light" style="width: 150px;">카테고리</th>
+                <td th:text="${post.categoryTitle}"></td>
+                <input type="hidden" name="categoryTitle" th:value="${post.categoryTitle}" />
+            </tr>
+            <tr>
+                <th class="bg-light">등록일시</th>
+                <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <input type="hidden" name="createdAt" th:value="${post.createdAt}" />
+            </tr>
+            <tr>
+                <th class="bg-light">수정일시</th>
+                <td th:text="${#temporals.format(post.modifiedAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <input type="hidden" name="modifiedAt" th:value="${post.modifiedAt}" />
+            </tr>
+            <tr>
+                <th class="bg-light">조회수</th>
+                <td th:text="${post.viewCount}"></td>
+                <input type="hidden" name="viewCount" th:value="${post.viewCount}" />
+            </tr>
+
+            <!-- 작성자 -->
+            <tr>
+                <th class="bg-light">작성자</th>
+                <td>
+                    <input type="text" th:field="*{username}" class="form-control" required />
+                    <div class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                </td>
+            </tr>
+
+            <!-- 비밀번호 -->
+            <tr>
+                <th class="bg-light">비밀번호</th>
+                <td>
+                    <input type="password" name="password" class="form-control" required />
+                </td>
+            </tr>
+
+            <!-- 제목 -->
+            <tr>
+                <th class="bg-light">제목</th>
+                <td>
+                    <input type="text" th:field="*{title}" class="form-control" required />
+                    <div class="text-danger" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                </td>
+            </tr>
+
+            <!-- 내용 -->
+            <tr>
+                <th class="bg-light">내용</th>
+                <td>
+                    <textarea th:field="*{content}" class="form-control" rows="6" required></textarea>
+                    <div class="text-danger" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
+                </td>
+            </tr>
+
+            <!-- 기존 파일 목록 및 삭제 -->
+            <tr>
+                <th class="bg-light">기존 첨부파일</th>
+                <td>
+                    <ul id="server-file-list" class="list-group"></ul>
+                </td>
+            </tr>
+
+            <!-- 새 파일 업로드 -->
+            <tr>
+                <th class="bg-light">파일 첨부</th>
+                <td>
+                    <input type="file" class="form-control" id="files" name="files" multiple />
+                    <ul id="file-list" class="list-group mt-2"></ul>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- 버튼 -->
+        <div class="d-flex justify-content-between">
+            <a th:href="@{/board/free/list}" class="btn btn-secondary">취소</a>
+            <button type="submit" class="btn btn-primary">저장</button>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const initialServerFiles = /*[[${post.files}]]*/ [];
+    /*]]>*/
+    const serverFileList = [...initialServerFiles];
+    const fileArray = [];
+    const serverFileListContainer = document.getElementById('server-file-list');
+    const fileList = document.getElementById('file-list');
+    const filesInput = document.getElementById('files');
+
+    function renderFileList() {
+        serverFileListContainer.innerHTML = '';
+        fileList.innerHTML = '';
+
+        // 기존 서버 파일
+        serverFileList.forEach((file, index) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.textContent = file.originalFileName;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-danger';
+            deleteBtn.textContent = '삭제';
+            deleteBtn.type = 'button';
+            deleteBtn.onclick = () => {
+                serverFileList.splice(index, 1);
+                renderFileList();
+            };
+
+            li.appendChild(deleteBtn);
+            serverFileListContainer.appendChild(li);
+        });
+
+        // 새로 추가한 파일
+        fileArray.forEach((file, index) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.textContent = file.name;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-sm btn-danger';
+            deleteBtn.textContent = '삭제';
+            deleteBtn.type = 'button';
+            deleteBtn.onclick = () => {
+                fileArray.splice(index, 1);
+                updateInputFiles();
+                renderFileList();
+            };
+
+            li.appendChild(deleteBtn);
+            fileList.appendChild(li);
+        });
+    }
+
+    function updateInputFiles() {
+        const dataTransfer = new DataTransfer();
+        fileArray.forEach(file => dataTransfer.items.add(file));
+        filesInput.files = dataTransfer.files;
+    }
+
+    filesInput.addEventListener('change', (event) => {
+        fileArray.push(...Array.from(event.target.files));
+        updateInputFiles();
+        renderFileList();
+    });
+
+    renderFileList();
+    /*]]>*/
+</script>
+</body>
+</html>

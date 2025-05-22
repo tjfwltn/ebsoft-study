@@ -50,11 +50,15 @@ public class PostService {
     }
 
     @Transactional
+    public PostDetailResponseDTO getPostAndIncreaseViewCount(Long id) {
+        postRepository.increaseViewCount(id);
+        return getPost(id);
+    }
+
     public PostDetailResponseDTO getPost(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 없습니다."));
 
-        postRepository.increaseViewCount(id);
         return PostDetailResponseDTO.from(post);
     }
 }
