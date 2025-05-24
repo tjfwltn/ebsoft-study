@@ -10,4 +10,6 @@ public class PageGroupDTO {
     private int startPage;
     private int endPage;
     private int pageGroupSize;
+    private boolean hasPrev;
+    private boolean hasNext;
 }

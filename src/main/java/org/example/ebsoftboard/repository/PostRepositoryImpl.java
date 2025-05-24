@@ -49,6 +49,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         Map<String, Object> params = new HashMap<>();
         applyConditions(condition, selectJpql, countJpql, params);
 
+        selectJpql.append(" ORDER BY p.createdAt DESC");
+
         TypedQuery<PostListResponseDTO> contentQuery = em.createQuery(selectJpql.toString(), PostListResponseDTO.class)
                 .setFirstResult((int) pageable.getOffset())
                 .setMaxResults(pageable.getPageSize());
@@ -60,13 +62,6 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         List<PostListResponseDTO> content = contentQuery.getResultList();
         Long total = countQuery.getSingleResult();
         return new PageImpl<>(content, pageable, total);
-    }
-
-    private static void setQueryParameters(Map<String, Object> params, TypedQuery<PostListResponseDTO> contentQuery, TypedQuery<Long> countQuery) {
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
-            contentQuery.setParameter(entry.getKey(), entry.getValue());
-            countQuery.setParameter(entry.getKey(), entry.getValue());
-        }
     }
 
     private static void applyConditions(PostSearchCondition condition, StringBuilder selectJpql, StringBuilder countJpql, Map<String, Object> params) {
@@ -91,5 +86,12 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         countJpql.append(dateClause);
         params.put("startDate", condition.getStartDateOrDefault());
         params.put("endDate", condition.getEndDateOrDefault());
+    }
+
+    private static void setQueryParameters(Map<String, Object> params, TypedQuery<PostListResponseDTO> contentQuery, TypedQuery<Long> countQuery) {
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
+            contentQuery.setParameter(entry.getKey(), entry.getValue());
+            countQuery.setParameter(entry.getKey(), entry.getValue());
+        }
     }
 }

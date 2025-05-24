@@ -124,20 +124,25 @@
         const postId = document.getElementById("postId").value;
         const actionType = document.getElementById("actionType").value;
 
-        fetch(`/post/verifyPassword`, {
+        fetch(`/api/post/verify-password`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: postId, password: password })
+            body: JSON.stringify({ id: postId, password: password }) // id와 password를 JSON으로 보냅니다.
         })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) { // HTTP 응답 코드가 2xx가 아닐 경우 (예: 400 Bad Request)
+                    return res.text().then(text => { throw new Error(text) }); // 에러 메시지를 파싱하여 던짐
+                }
+                return res.json();
+            })
             .then(data => {
-                if (data.valid) {
+                if (data.valid) { // 서버 응답의 'valid' 필드 확인
                     if (actionType === "modify") {
-                        window.location.href = `/post/modify/${postId}`;
+                        window.location.href = `/board/free/modify/${postId}`; // URL 경로에 /board/free/ 추가
                     } else if (actionType === "delete") {
                         const form = document.createElement("form");
                         form.method = "POST";
-                        form.action = "/post/delete";
+                        form.action = "/board/free/delete";
                         const input = document.createElement("input");
                         input.type = "hidden";
                         input.name = "id";
@@ -147,8 +152,13 @@
                         form.submit();
                     }
                 } else {
-                    alert("비밀번호가 일치하지 않습니다.");
+                    // 서버에서 받은 에러 메시지를 표시
+                    alert(data.message || "비밀번호가 일치하지 않습니다.");
                 }
+            })
+            .catch(error => { // fetch 또는 서버 응답 처리 중 발생한 오류
+                console.error("Error during password verification:", error);
+                alert("비밀번호 검증 중 오류가 발생했습니다: " + error.message);
             });
 
         closeModal();

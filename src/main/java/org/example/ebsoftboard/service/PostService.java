@@ -1,10 +1,7 @@
 package org.example.ebsoftboard.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.example.ebsoftboard.dto.PostDetailResponseDTO;
-import org.example.ebsoftboard.dto.PostRequestDTO;
-import org.example.ebsoftboard.dto.PostListResponseDTO;
-import org.example.ebsoftboard.dto.PostSearchCondition;
+import org.example.ebsoftboard.dto.*;
 import org.example.ebsoftboard.entity.Category;
 import org.example.ebsoftboard.entity.Post;
 import org.example.ebsoftboard.repository.CategoryRepository;
@@ -13,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 public class PostService {
@@ -30,7 +30,6 @@ public class PostService {
     public Page<PostListResponseDTO> getPaginatedPostList(PostSearchCondition condition, Pageable pageable) {
         return postRepository.searchPosts(condition, pageable);
     }
-
 
     @Transactional
     public void savePostWithFiles(PostRequestDTO postRequestDTO) {
@@ -60,5 +59,29 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 없습니다."));
 
         return PostDetailResponseDTO.from(post);
+    }
+
+    @Transactional
+    public void updatePostWithFiles(Long id, List<Long> deleteFileIds, List<MultipartFile> files, PostUpdateRequestDTO dto) {
+        Post post = postRepository.findPostOnlyById(id)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
+
+        post.update(dto.getUsername(), dto.getPassword(), dto.getTitle(), dto.getContent());
+
+        fileService.deleteFilesByIds(deleteFileIds);
+
+        fileService.saveFiles(post, files);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean verifyPassword(PostPasswordVerificationRequestDTO requestDTO) {
+        Post post = postRepository.findPostOnlyById(requestDTO.getId())
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
+
+        return post.getPassword().equals(requestDTO.getPassword());
+    }
+
+    public void deletePost(Long id) {
+        postRepository.deleteById(id);
     }
 }

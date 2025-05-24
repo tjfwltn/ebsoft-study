@@ -10,6 +10,8 @@ import org.example.ebsoftboard.entity.Post;
 
 import java.time.LocalDateTime;
 
+import static org.example.ebsoftboard.constants.ValidationConstants.*;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,8 +20,8 @@ public class CommentRequestDTO {
     private Long postId;
 
     @NotBlank
-    @Size(min = 1, max = 1999,
-            message = "댓글은 1글자 이상, 2000글자 미만이어야 합니다.")
+    @Size(min = COMMENT_CONTENT_MIN_LENGTH, max = COMMENT_CONTENT_MAX_LENGTH,
+            message = COMMENT_CONTENT_SIZE_MESSAGE)
     private String content;
 
     public Comment toEntity(Post post) {

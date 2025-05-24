@@ -1,25 +1,19 @@
 package org.example.ebsoftboard.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 import static org.example.ebsoftboard.constants.ValidationConstants.*;
+
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class PostRequestDTO {
-
-    @NotNull
-    private Long categoryId;
+public class PostUpdateRequestDTO {
 
     @NotBlank
     @Size(min = USERNAME_MIN_LENGTH, max = USERNAME_MAX_LENGTH,
@@ -37,11 +31,10 @@ public class PostRequestDTO {
     @Size(min = POST_TITLE_MIN_LENGTH, max = POST_TITLE_MAX_LENGTH,
             message = POST_TITLE_SIZE_MESSAGE)
     private String title;
+
     @NotBlank
     @Size(min = POST_CONTENT_MIN_LENGTH, max = POST_CONTENT_MAX_LENGTH,
             message = POST_CONTENT_SIZE_MESSAGE)
     private String content;
-
-    private List<MultipartFile> files;
 
 }

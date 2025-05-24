@@ -58,6 +58,7 @@
 
         <div class="col-auto align-self-end">
             <button type="submit" class="btn btn-primary">검색</button>
+            <a th:href="@{/board/free/list}" class="btn btn-secondary ms-2">초기화</a>
         </div>
     </form>
 
@@ -111,27 +112,29 @@
 
     <nav>
         <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${postList.first} ? 'disabled'">
+            <li class="page-item" th:classappend="${!pageGroup.hasPrev} ? 'disabled'">
                 <a class="page-link"
-                   th:href="@{/board/free/list(page=${postList.number},
+                   th:href="@{/board/free/list(page=${pageGroup.startPage - 2},
                                                startDate=${condition.startDate},
                                                endDate=${condition.endDate},
                                                categoryId=${condition.categoryId},
                                                keyword=${condition.keyword})}">이전</a>
             </li>
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, postList.totalPages - 1)}"
-                th:classappend="${i == postList.number} ? 'active'">
+
+            <li class="page-item" th:each="i : ${#numbers.sequence(pageGroup.startPage, pageGroup.endPage)}"
+                th:classappend="${i == (postList.number + 1)} ? 'active'">
                 <a class="page-link"
-                   th:href="@{/board/free/list(page=${i},
+                   th:href="@{/board/free/list(page=${i - 1},
                                                startDate=${condition.startDate},
                                                endDate=${condition.endDate},
                                                categoryId=${condition.categoryId},
                                                keyword=${condition.keyword})}"
-                   th:text="${i + 1}">1</a>
+                   th:text="${i}">1</a>
             </li>
-            <li class="page-item" th:classappend="${postList.last} ? 'disabled'">
+
+            <li class="page-item" th:classappend="${!pageGroup.hasNext} ? 'disabled'">
                 <a class="page-link"
-                   th:href="@{/board/free/list(page=${postList.number + 1},
+                   th:href="@{/board/free/list(page=${pageGroup.endPage},
                                                startDate=${condition.startDate},
                                                endDate=${condition.endDate},
                                                categoryId=${condition.categoryId},

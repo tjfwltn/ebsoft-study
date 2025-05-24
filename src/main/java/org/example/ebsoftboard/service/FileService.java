@@ -46,4 +46,11 @@ public class FileService {
         return fileRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("파일을 찾을 수 없습니다."));
     }
+
+    public void deleteFilesByIds(List<Long> deleteFileIds) {
+        if (deleteFileIds == null || deleteFileIds.isEmpty()) {
+            return;
+        }
+        fileRepository.deleteAllByIdInBatch(deleteFileIds);
+    }
 }

@@ -88,6 +88,9 @@
             </tbody>
         </table>
 
+        <!-- 삭제된 파일 ID를 담을 hidden input -->
+        <div id="delete-file-ids-container"></div>
+
         <!-- 버튼 -->
         <div class="d-flex justify-content-between">
             <a th:href="@{/board/free/list}" class="btn btn-secondary">취소</a>
@@ -99,12 +102,12 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     const initialServerFiles = /*[[${post.files}]]*/ [];
-    /*]]>*/
     const serverFileList = [...initialServerFiles];
     const fileArray = [];
     const serverFileListContainer = document.getElementById('server-file-list');
     const fileList = document.getElementById('file-list');
     const filesInput = document.getElementById('files');
+    const deleteFileIdsContainer = document.getElementById('delete-file-ids-container');
 
     function renderFileList() {
         serverFileListContainer.innerHTML = '';
@@ -121,6 +124,14 @@
             deleteBtn.textContent = '삭제';
             deleteBtn.type = 'button';
             deleteBtn.onclick = () => {
+                // 삭제된 파일 ID를 hidden input으로 추가
+                console.log("Deleting file with ID:", file.id);
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'deleteFileIds';
+                input.value = file.id;
+                deleteFileIdsContainer.appendChild(input);
+
                 serverFileList.splice(index, 1);
                 renderFileList();
             };

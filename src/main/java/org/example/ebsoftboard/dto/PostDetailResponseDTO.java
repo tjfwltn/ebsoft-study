@@ -32,6 +32,7 @@ public class PostDetailResponseDTO {
                 .content(post.getContents())
                 .categoryTitle(post.getCategory().getTitle())
                 .createdAt(post.getCreatedAt())
+                .modifiedAt(post.getModifiedAt())
                 .comments(post.getComments().stream().map(CommentResponseDTO::from).toList())
                 .files(post.getFiles().stream().map(FileResponseDTO::from).toList())
                 .viewCount(post.getViewCount())

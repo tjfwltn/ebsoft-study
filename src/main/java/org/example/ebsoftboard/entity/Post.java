@@ -56,4 +56,12 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<File> files = new ArrayList<>();
+
+    public void update(String username, String password, String title, String content) {
+        this.username = username;
+        this.password = password;
+        this.title = title;
+        this.contents = content;
+        this.modifiedAt = LocalDateTime.now();
+    }
 }
